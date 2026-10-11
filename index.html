@@ -1,0 +1,541 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Pipe Flip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+/* Layout: one-screen mobile game — HUD pill + gear, two framed counter cards, inset board tray, chunky buttons. Single committed look (royal-blue casual puzzle). */
+:root{
+  color-scheme: dark;
+  --sky-1:#3d48b0; --sky-2:#29308a; --sky-3:#1b1f63;
+  --tray:#1d2266; --tray-rim:#323a9c;
+  --tile:#fbf6eb; --tile-2:#f1e8d4; --tile-lip:#cbb593; --tile-base:#2f62c9;
+  --tile-b:var(--tile); --tile-b2:var(--tile-2); --tile-b-lip:var(--tile-lip);
+  --src:#6fd3df; --src-2:#3fb0c4; --src-lip:#2a8297;
+  --ink:#1a1e57; --pipe-out:#2b3370; --pipe-in:#cfd3ea; --flange:#8f9bd0;
+  --water:#33c3ff; --water-hi:#b9eeff;
+  --gold:#ffd24d; --gold-2:#f3a01b; --gold-ink:#5a1a12;
+  --red:#b02c45; --red-2:#86203a;
+  --green:#62d14c; --green-lip:#2f8b2a;
+  --white:#ffffff;
+  --f-display:"Lilita One","Fredoka","Arial Rounded MT Bold",system-ui,sans-serif;
+  --f-body:"Fredoka","Arial Rounded MT Bold",system-ui,sans-serif;
+}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{
+  margin:0;background:radial-gradient(120% 80% at 50% 35%,var(--sky-1),var(--sky-2) 55%,var(--sky-3));
+  background-color:var(--sky-2);color:var(--white);font-family:var(--f-body);
+  overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
+}
+.app{height:100%;max-width:520px;margin:0 auto;padding-inline:16px;padding-block:14px 18px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px}
+
+/* ---------- HUD ---------- */
+.hud{display:flex;justify-content:space-between;align-items:center}
+.level-pill{
+  background:var(--sky-3);border-radius:999px;padding:8px 22px 9px;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.12);
+  font-family:var(--f-display);font-size:26px;letter-spacing:.5px;
+  text-shadow:0 3px 0 rgba(0,0,0,.35);
+}
+.gear{
+  width:54px;height:54px;border:0;border-radius:16px;cursor:pointer;display:grid;place-items:center;
+  background:linear-gradient(#4b5ad0,#3443b3);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.25),0 5px 0 #222a86,0 8px 12px rgba(0,0,0,.35);
+}
+.gear:active{transform:translateY(3px);box-shadow:inset 0 2px 0 rgba(255,255,255,.25),0 2px 0 #222a86}
+.gear svg{width:30px;height:30px}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+
+/* ---------- Counter cards ---------- */
+.cards{display:flex;justify-content:center;gap:12px}
+.card-c{border-radius:14px;padding:4px;background:linear-gradient(var(--gold),var(--gold-2));box-shadow:0 4px 0 #c26f0e,0 7px 10px rgba(0,0,0,.3)}
+.card-c .inner{display:flex;align-items:center;gap:7px;border-radius:10px;padding:5px 6px 5px 9px;
+  background:linear-gradient(var(--red),var(--red-2));box-shadow:inset 0 0 0 2px rgba(0,0,0,.18)}
+.card-c .inner svg{width:20px;height:20px;flex:none}
+.label{font-family:var(--f-display);font-size:17px;line-height:1;color:var(--white);
+  text-shadow:0 2px 0 #4a0f1e,1.5px 0 0 #4a0f1e,-1.5px 0 0 #4a0f1e,0 -1.5px 0 #4a0f1e}
+.badge{min-width:44px;padding:3px 9px 4px;border-radius:8px;text-align:center;box-sizing:border-box;
+  background:linear-gradient(#ffe07a,var(--gold-2));box-shadow:0 2px 0 #c26f0e;
+  font-family:var(--f-display);font-size:17px;line-height:1.1;color:var(--gold-ink);font-variant-numeric:tabular-nums}
+.badge.pop{animation:pop .35s ease}
+@keyframes pop{40%{transform:scale(1.2)}}
+
+.tip{text-align:center;font-weight:600;font-size:14px;color:#c9d0ff;opacity:.9;min-height:18px}
+
+/* ---------- Board ---------- */
+.board-area{flex:1;min-height:0;display:grid;place-items:center}
+.tray{
+  position:relative;border-radius:26px;padding:14px 14px calc(14px + var(--cs,80px)*.1);
+  background:var(--tray);
+  box-shadow:inset 0 0 0 3px var(--tray-rim),inset 0 10px 24px rgba(0,0,0,.45),0 2px 0 rgba(255,255,255,.06);
+}
+.tap-in{position:absolute;top:-30px;right:calc(14px + var(--cs,80px)/2 - 17px);width:34px;height:44px;z-index:0}
+.grid{position:relative;z-index:1;width:var(--bs,300px);height:var(--bs,300px);display:grid;gap:var(--gap,6px)}
+.cell{position:relative;perspective:700px;cursor:pointer}
+.cell .lift{position:absolute;inset:0}
+.cell.flipping .lift{animation:lift .46s ease}
+@keyframes lift{45%{transform:scale(1.1) translateY(-4%)}}
+.cell .card{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .46s cubic-bezier(.35,1.35,.55,1)}
+.cell.back .card{transform:rotateY(180deg)}
+.face{
+  position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:calc(var(--cs)*.17);
+  background:linear-gradient(var(--tile),var(--tile-2));
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.9),inset 0 -3px 0 rgba(0,0,0,.05),
+    0 calc(var(--cs)*.055) 0 var(--tile-lip),0 calc(var(--cs)*.09) 0 var(--tile-base),0 calc(var(--cs)*.11) 8px rgba(0,0,0,.35);
+}
+.face.f1{transform:rotateY(180deg);background:linear-gradient(var(--tile-b),var(--tile-b2));
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.9),inset 0 -3px 0 rgba(0,0,0,.05),
+    0 calc(var(--cs)*.055) 0 var(--tile-b-lip),0 calc(var(--cs)*.09) 0 var(--tile-base),0 calc(var(--cs)*.11) 8px rgba(0,0,0,.35)}
+.cell.src{cursor:default}
+.cell.src .face{background:linear-gradient(var(--src),var(--src-2));
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.6),0 calc(var(--cs)*.055) 0 var(--src-lip),0 calc(var(--cs)*.09) 0 var(--tile-base),0 calc(var(--cs)*.11) 8px rgba(0,0,0,.35)}
+.cell:not(.src):active .lift{transform:scale(.95)}
+.cell.shake .lift{animation:shake .35s}
+@keyframes shake{25%{transform:rotate(-5deg)}75%{transform:rotate(5deg)}}
+.cell.hint .face{outline:4px solid var(--gold);outline-offset:-2px}
+.face::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;
+  background:linear-gradient(var(--src),var(--src-2));box-shadow:inset 0 2px 0 rgba(255,255,255,.6);transition:opacity .25s ease var(--wd,0ms)}
+.face.wet::before{opacity:1}
+.face{transition:box-shadow .25s ease var(--wd,0ms)}
+.cell:not(.src) .face.wet{box-shadow:inset 0 2px 0 rgba(255,255,255,.6),0 calc(var(--cs)*.055) 0 var(--src-lip),0 calc(var(--cs)*.09) 0 var(--tile-base),0 calc(var(--cs)*.11) 8px rgba(0,0,0,.35)}
+.cell.src .face::before{display:none}
+.face svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.face svg path{fill:none;stroke-linecap:butt;stroke-linejoin:round}
+.ps{stroke:rgba(20,24,80,.2)} .ps-f{fill:rgba(20,24,80,.2)}
+.pb0{stroke:var(--pipe-out)} .pb0-f{fill:var(--pipe-out)}
+.pb1{stroke:#8790dc} .pb1-f{fill:#8790dc}
+.pb2{stroke:#aeb5f2} .pb2-f{fill:#aeb5f2}
+.pb3{stroke:#e2e5ff;opacity:.9} .pb3-f{fill:#e2e5ff;opacity:.9}
+.col{stroke:var(--pipe-out);stroke-width:2.3}
+.face svg path.w{stroke:var(--water);stroke-width:17;stroke-dasharray:1 1;stroke-dashoffset:1}
+.face svg path.w.hl{stroke:#c6f3ff;stroke-width:4.5;opacity:.9}
+.wh{fill:var(--water);opacity:0}
+.glint{stroke:#fff;stroke-width:3;opacity:.55;stroke-linecap:round}
+.leak{opacity:0;transition:opacity .2s}
+.leak.on{opacity:1}
+.leak circle{fill:var(--water-hi);stroke:var(--water);stroke-width:1.5;animation:spray .7s linear infinite}
+.leak circle:nth-child(2){animation-delay:.23s}
+.leak circle:nth-child(3){animation-delay:.47s}
+@keyframes spray{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--sx),var(--sy)) scale(.4);opacity:0}}
+
+/* ---------- Buttons ---------- */
+.actions{display:flex;justify-content:center;gap:14px}
+.btn{
+  border:0;cursor:pointer;font-family:var(--f-display);font-size:21px;color:var(--white);
+  padding:11px 22px 13px;border-radius:18px;display:flex;align-items:center;gap:8px;
+  text-shadow:0 2px 0 rgba(0,0,0,.3);
+}
+.btn svg{width:22px;height:22px}
+.btn.blue{background:linear-gradient(#5866d8,#3e4bbd);box-shadow:inset 0 2px 0 rgba(255,255,255,.25),0 5px 0 #232c8c,0 9px 12px rgba(0,0,0,.3)}
+.btn.gold{color:var(--gold-ink);text-shadow:0 1px 0 rgba(255,255,255,.4);background:linear-gradient(#ffe27e,var(--gold-2));box-shadow:inset 0 2px 0 rgba(255,255,255,.5),0 5px 0 #c26f0e,0 9px 12px rgba(0,0,0,.3)}
+.btn.green{background:linear-gradient(#7ee05f,#4cbb3a);box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 6px 0 var(--green-lip),0 10px 14px rgba(0,0,0,.3);font-size:26px;padding:13px 34px 15px}
+.btn:active{transform:translateY(3px);filter:brightness(.97)}
+.btn[disabled]{opacity:.5;pointer-events:none}
+
+/* ---------- Modal ---------- */
+.overlay{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:16px;background:rgba(12,14,50,.62);backdrop-filter:blur(3px)}
+.panel{position:relative;max-height:calc(100% - 8px);overflow:auto;width:min(100%,350px);border-radius:26px;padding:7px;background:linear-gradient(var(--gold),var(--gold-2));
+  box-shadow:0 7px 0 #c26f0e,0 18px 30px rgba(0,0,0,.45);animation:panelIn .45s cubic-bezier(.3,1.5,.5,1)}
+@keyframes panelIn{from{transform:scale(.6);opacity:0}}
+.panel .in{border-radius:20px;background:linear-gradient(var(--red),var(--red-2));padding:28px 20px 30px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.panel h2{margin:0;font-family:var(--f-display);font-weight:400;font-size:32px;line-height:1.05;text-wrap:balance;
+  text-shadow:0 3px 0 #4a0f1e,2px 0 0 #4a0f1e,-2px 0 0 #4a0f1e,0 -2px 0 #4a0f1e}
+.stars{display:flex;gap:6px;align-items:flex-end}
+.stars svg{width:62px;height:62px;filter:drop-shadow(0 4px 0 rgba(0,0,0,.25))}
+.stars svg:nth-child(2){width:76px;height:76px}
+.stars svg.on{animation:starIn .5s cubic-bezier(.3,1.6,.5,1) both}
+.stat{font-weight:600;font-size:17px;color:#ffe3e8}
+.lv-label{font-family:var(--f-display);font-size:18px;color:#ffe3e8;margin-bottom:-6px}
+.lv-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;width:100%;padding-bottom:4px}
+.lv{aspect-ratio:1;border:0;border-radius:12px;cursor:pointer;font-family:var(--f-display);font-size:18px;color:var(--ink);
+  background:linear-gradient(var(--tile),var(--tile-2));
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.9),0 4px 0 var(--tile-lip),0 6px 8px rgba(0,0,0,.3);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;padding:0}
+.lv small{font-family:var(--f-body);font-weight:600;font-size:9px;color:rgba(26,30,87,.55);margin-top:2px}
+.lv.cur{background:linear-gradient(#ffe27e,var(--gold-2));color:var(--gold-ink);box-shadow:inset 0 2px 0 rgba(255,255,255,.5),0 4px 0 #c26f0e,0 6px 8px rgba(0,0,0,.3)}
+.lv.cur small{color:rgba(90,26,18,.6)}
+.lv:active{transform:translateY(3px);box-shadow:0 1px 0 var(--tile-lip)}
+.set-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.drop{position:fixed;top:-20px;width:12px;height:16px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:var(--water);z-index:19;animation:fall linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(25deg)}}
+@keyframes starIn{from{transform:scale(0) rotate(-40deg)}}
+@media (prefers-reduced-motion: reduce){
+  .cell .card{transition-duration:.15s}
+  .cell.flipping .lift,.leak circle,.panel,.stars svg.on{animation:none}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="pfColH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef0ff"/><stop offset=".45" stop-color="#b3baf3"/><stop offset="1" stop-color="#7a84d2"/></linearGradient>
+  <linearGradient id="pfColV" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#eef0ff"/><stop offset=".45" stop-color="#b3baf3"/><stop offset="1" stop-color="#7a84d2"/></linearGradient>
+  <radialGradient id="pfCap" cx=".38" cy=".34" r=".75"><stop offset="0" stop-color="#eef0ff"/><stop offset=".5" stop-color="#aeb5f2"/><stop offset="1" stop-color="#7a84d2"/></radialGradient>
+</defs></svg>
+<div class="app" id="app">
+  <div class="hud">
+    <div class="level-pill" id="levelTxt">Seviye 1</div>
+    <button class="gear" id="gearBtn" aria-label="Ayarlar">
+      <svg viewBox="0 0 24 24"><path fill="#fff" stroke="#1b2066" stroke-width="1.2" d="M10.3 2h3.4l.5 2.6a8 8 0 0 1 1.9 1.1l2.5-.9 1.7 2.9-2 1.7a8 8 0 0 1 0 2.2l2 1.7-1.7 2.9-2.5-.9a8 8 0 0 1-1.9 1.1l-.5 2.6h-3.4l-.5-2.6a8 8 0 0 1-1.9-1.1l-2.5.9-1.7-2.9 2-1.7a8 8 0 0 1 0-2.2l-2-1.7 1.7-2.9 2.5.9a8 8 0 0 1 1.9-1.1z"/><circle cx="12" cy="12" r="3.3" fill="#3b49b8"/></svg>
+    </button>
+  </div>
+
+  <div class="cards">
+    <div class="card-c"><div class="inner">
+      <svg viewBox="0 0 24 24"><path d="M12 2.5C9 7 6 10.2 6 14a6 6 0 0 0 12 0c0-3.8-3-7-6-11.5z" fill="#33c3ff" stroke="#4a0f1e" stroke-width="1.6"/><path d="M9.2 14.2a3 3 0 0 0 2.4 3" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      <span class="label">Su</span><span class="badge" id="waterBadge">0/9</span>
+    </div></div>
+    <div class="card-c"><div class="inner">
+      <svg viewBox="0 0 24 24"><path d="M4 9a8 8 0 0 1 14-3l2-2v6h-6l2.3-2.3A5.5 5.5 0 0 0 6.6 9.5z M20 15a8 8 0 0 1-14 3l-2 2v-6h6l-2.3 2.3a5.5 5.5 0 0 0 9.7-1.8z" fill="#ffd24d" stroke="#4a0f1e" stroke-width="1.2" stroke-linejoin="round"/></svg>
+      <span class="label">Hamle</span><span class="badge" id="movesBadge">0</span>
+    </div></div>
+  </div>
+  <div class="tip" id="tip">Karoya dokun, çevir. Tüm boruları suya bağla.</div>
+
+  <div class="board-area" id="boardArea">
+    <div class="tray" id="tray">
+      <svg class="tap-in" viewBox="0 0 34 44"><rect x="5" y="0" width="24" height="10" rx="3" fill="#8f9bd0" stroke="#2b3370" stroke-width="2.5"/><rect x="8" y="9" width="18" height="35" fill="#2b3370"/><rect x="12" y="9" width="10" height="35" fill="#33c3ff"/></svg>
+      <div class="grid" id="grid"></div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn blue" id="restartBtn"><svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 2.1-5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M4 3v5h5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>Yeniden</button>
+    <button class="btn gold" id="hintBtn"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z" fill="#fff6c9" stroke="#5a1a12" stroke-width="1.8"/><path d="M9 20h6" stroke="#5a1a12" stroke-width="2.2" stroke-linecap="round"/></svg>İpucu</button>
+  </div>
+</div>
+
+<div class="overlay" id="winOv" hidden>
+  <div class="panel"><div class="in">
+    <h2 id="winTitle">Bölüm Tamamlandı!</h2>
+    <div class="stars" id="stars"></div>
+    <div class="stat" id="winStat"></div>
+    <button class="btn green" id="nextBtn">Sonraki</button>
+  </div></div>
+</div>
+
+<div class="overlay" id="setOv" hidden>
+  <div class="panel"><div class="in">
+    <h2>Ayarlar</h2>
+    <div class="lv-label">Seviyeler</div>
+    <div class="lv-grid" id="lvGrid"></div>
+    <div class="set-row">
+      <button class="btn blue" id="soundBtn">Ses: Açık</button>
+      <button class="btn gold" id="restart2">Yeniden</button>
+    </div>
+    <button class="btn green" id="closeSet">Devam</button>
+  </div></div>
+</div>
+
+<script>
+(() => {
+const DIRS = [[0,-1],[1,0],[0,1],[-1,0]];          // N E S W
+const EDGE = [[50,0],[100,50],[50,100],[0,50]];
+const T = 170;                                       // ms of water travel per tile
+const $ = id => document.getElementById(id);
+const grid = $('grid');
+
+let S = null;          // level state
+let soundOn = true, locked = false;
+let level = 1;
+try { level = parseInt(localStorage.getItem('pipeflip.level')) || 1; soundOn = localStorage.getItem('pipeflip.sound') !== '0'; } catch(e) {}
+
+/* ---------- RNG + generation ---------- */
+function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const rot = (m,k)=>{for(let i=0;i<k;i++)m=((m<<1)|(m>>3))&15;return m};
+const bits = m => [0,1,2,3].filter(d=>m&(1<<d));
+
+const MAX_LEVEL=30;
+function sizeFor(lv){return lv<=1?2:lv<=4?3:lv<=14?4:5}
+
+function allWet(n,src,faces,cur){
+  const N=n*n,m=i=>faces[i][cur[i]],seen=Array(N).fill(false),q=[src];seen[src]=true;let c=1;
+  while(q.length){const i=q.shift(),x=i%n,y=(i/n)|0;for(const d of bits(m(i))){const nx=x+DIRS[d][0],ny=y+DIRS[d][1];
+    if(nx<0||ny<0||nx>=n||ny>=n)continue;const j=ny*n+nx;if(!seen[j]&&(m(j)&(1<<((d+2)%4)))){seen[j]=true;c++;q.push(j)}}}
+  return c===N;
+}
+function generate(lv){
+  const n = sizeFor(lv), N = n*n, r = mulberry(lv*7919+41);
+  const src = n-1;                                   // top-right
+  const sol = Array(N).fill(0), inT = Array(N).fill(false);
+  const front = [];
+  const addEdges = i => { const x=i%n,y=(i/n)|0; DIRS.forEach(([dx,dy],d)=>{const nx=x+dx,ny=y+dy; if(nx>=0&&ny>=0&&nx<n&&ny<n) front.push([i,ny*n+nx,d]);}); };
+  inT[src]=true; addEdges(src);
+  while(front.length){
+    const k=(r()*front.length)|0, [a,b,d]=front.splice(k,1)[0];
+    if(inT[b]) continue;
+    sol[a]|=1<<d; sol[b]|=1<<((d+2)%4); inT[b]=true; addEdges(b);
+  }
+  // openings that would point off the board are never allowed on any face
+  const outward=i=>{const x=i%n,y=(i/n)|0;return (y===0?1:0)|(x===n-1?2:0)|(y===n-1?4:0)|(x===0?8:0)};
+  const W={1:.6,2:1,3:.8,4:.25};
+  const pickDecoy=(i,ban)=>{
+    const c=[];for(let m=1;m<16;m++){if(m===sol[i]||(m&outward(i))||(m&ban))continue;c.push(m)}
+    let t=r()*c.reduce((a,m)=>a+W[bits(m).length],0);
+    for(const m of c){if((t-=W[bits(m).length])<=0)return m}return c[c.length-1];
+  };
+  const faces=[], solFace=[], cur=[];
+  for(let i=0;i<N;i++){
+    if(i===src){faces.push([sol[i],sol[i]]);solFace.push(0);cur.push(0);continue}
+    // left (i===src-1, opening E) and below (i===src+n, opening N) neighbours of the source start disconnected
+    const toSrc = i===src-1 ? 2 : i===src+n ? 1 : 0;
+    const guard = toSrc && (sol[i]&toSrc);
+    const dec=pickDecoy(i, guard?toSrc:0);
+    const sf = r()<.5?0:1;
+    faces.push(sf?[dec,sol[i]]:[sol[i],dec]); solFace.push(sf);
+    cur.push(guard ? 1-sf : r()<.62 ? 1-sf : sf);
+  }
+  const wrong=()=>cur.filter((c,i)=>i!==src&&c!==solFace[i]).length;
+  const need=Math.max(2,Math.ceil((N-1)*.45));
+  while(wrong()<need){const i=(r()*N)|0;if(i!==src&&cur[i]===solFace[i])cur[i]=1-cur[i];}
+  // never start already solved: keep breaking a correct tile until some tile is dry
+  while(allWet(n,src,faces,cur)){const ok=[];for(let i=0;i<N;i++)if(i!==src&&cur[i]===solFace[i])ok.push(i);
+    const i=ok.length?ok[(r()*ok.length)|0]:(()=>{let k;do{k=(r()*N)|0}while(k===src);return k})();cur[i]=1-cur[i];}
+  return {n,N,src,faces,solFace,cur,par:wrong(),moves:0,hints:0};
+}
+
+/* ---------- SVG ---------- */
+const ELBOW=23;
+const pt=p=>p[0].toFixed(2)+','+p[1].toFixed(2);
+function shapeGeo(mask){
+  const b=bits(mask), arms={};
+  const E=d=>EDGE[d], P=d=>[50+DIRS[d][0]*ELBOW,50+DIRS[d][1]*ELBOW];
+  const corner=b.length===2&&(b[1]-b[0])%2===1;
+  let skel='';
+  if(corner){
+    const [a,c]=b, pa=P(a), pc=P(c);
+    const mid=[(pa[0]+100+pc[0])/4,(pa[1]+100+pc[1])/4];
+    const ca=[(pa[0]+50)/2,(pa[1]+50)/2], cc=[(pc[0]+50)/2,(pc[1]+50)/2];
+    skel=`M${pt(E(a))}L${pt(pa)}Q50,50 ${pt(pc)}L${pt(E(c))}`;
+    arms[a]={pin:`M${pt(E(a))}L${pt(pa)}Q${pt(ca)} ${pt(mid)}`,pout:`M${pt(mid)}Q${pt(ca)} ${pt(pa)}L${pt(E(a))}`};
+    arms[c]={pin:`M${pt(E(c))}L${pt(pc)}Q${pt(cc)} ${pt(mid)}`,pout:`M${pt(mid)}Q${pt(cc)} ${pt(pc)}L${pt(E(c))}`};
+  } else b.forEach(d=>{skel+=`M50,50L${pt(E(d))}`;arms[d]={pin:`M${pt(E(d))}L50,50`,pout:`M50,50L${pt(E(d))}`};});
+  return {b,arms,skel,corner,hub:!corner&&b.length!==2};
+}
+function pipeSVG(mask, other, isSrc){
+  const g=shapeGeo(mask), {b}=g; let s='<svg viewBox="0 0 100 100" aria-hidden="true">';
+  const layer=(cls,w,extra='')=>`<path class="${cls}" d="${g.skel}" stroke-width="${w}" ${extra}/>`+(g.hub?`<circle cx="50" cy="50" r="${w/2}" class="${cls}-f" ${extra}/>`:'');
+  s+=layer('ps',30,'transform="translate(1.5 4)"');
+  s+=layer('pb0',30)+layer('pb1',23)+layer('pb2',14)+layer('pb3',5.5);
+  b.forEach(d=>{const a=g.arms[d];
+    s+=`<path class="w" data-d="${d}" data-pin="${a.pin}" data-pout="${a.pout}" d="${a.pout}" pathLength="1"/>`;
+    s+=`<path class="w hl" data-d="${d}" data-pin="${a.pin}" data-pout="${a.pout}" d="${a.pout}" pathLength="1"/>`;});
+  s+=`<circle class="wh" cx="50" cy="50" r="${g.hub?8.5:0}"/>`;
+  b.forEach(d=>{const [x,y]=EDGE[d];
+    s+= d%2===0?`<rect class="col" x="30.5" y="${y===0?0.8:89.7}" width="39" height="9.5" rx="3" fill="url(#pfColH)"/>`
+               :`<rect class="col" x="${x===0?0.8:89.7}" y="30.5" width="9.5" height="39" rx="3" fill="url(#pfColV)"/>`;});
+  if(b.length===1) s+='<circle cx="50" cy="50" r="16" fill="url(#pfCap)" stroke="var(--pipe-out)" stroke-width="2.8"/><circle cx="50" cy="50" r="5.8" fill="var(--pipe-out)"/><circle cx="44.5" cy="44" r="2.8" fill="#fff" opacity=".7"/>';
+  if(isSrc){
+    s+='<circle cx="50" cy="50" r="21" fill="#e5484d" stroke="var(--pipe-out)" stroke-width="3.5"/><circle cx="50" cy="50" r="12" fill="none" stroke="#ffd0d1" stroke-width="3"/>';
+    for(let k=0;k<4;k++){const a=k*Math.PI/2+Math.PI/4;s+=`<line x1="${50+6*Math.cos(a)}" y1="${50+6*Math.sin(a)}" x2="${50+19*Math.cos(a)}" y2="${50+19*Math.sin(a)}" stroke="var(--pipe-out)" stroke-width="3.5" stroke-linecap="round"/>`;}
+    s+='<circle cx="50" cy="50" r="5.5" fill="#ffd24d" stroke="var(--pipe-out)" stroke-width="2.5"/>';
+  }
+  b.forEach(d=>{const [x,y]=EDGE[d],[dx,dy]=DIRS[d];
+    s+=`<g class="leak" data-d="${d}" transform="translate(${x} ${y})" style="--sx:${dx*26+dy*10}px;--sy:${dy*26+dx*10}px"><circle r="5"/><circle r="4.2" cx="${dy*7}" cy="${dx*7}"/><circle r="3.6" cx="${-dy*7}" cy="${-dx*7}"/></g>`;});
+  return s+'</svg>';
+}
+
+/* ---------- Build ---------- */
+let cells=[];
+function build(){
+  grid.innerHTML=''; cells=[];
+  grid.style.gridTemplateColumns=`repeat(${S.n},1fr)`;
+  for(let i=0;i<S.N;i++){
+    const isSrc=i===S.src, c=document.createElement('div');
+    c.className='cell'+(isSrc?' src':'')+(S.cur[i]?' back':'');
+    c.innerHTML=`<div class="lift"><div class="card"><div class="face f0">${pipeSVG(S.faces[i][0],S.faces[i][1],isSrc)}</div>${isSrc?'':`<div class="face f1">${pipeSVG(S.faces[i][1],S.faces[i][0],false)}</div>`}</div></div>`;
+    c.setAttribute('role','button');c.tabIndex=isSrc?-1:0;
+    c.setAttribute('aria-label',isSrc?'Su kaynağı':'Karoyu çevir');
+    c.addEventListener('click',()=>tap(i));
+    c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tap(i)}});
+    grid.appendChild(c);
+    cells.push({el:c,faceEls:[c.querySelector('.f0'),c.querySelector('.f1')],filled:[false,false]});
+  }
+  fit();
+}
+
+function fit(){
+  if(!S) return;
+  const area=$('boardArea'), pad=28;
+  const avail=Math.min(area.clientWidth, area.clientHeight-20)-pad;
+  const bs=Math.max(180,Math.min(avail,500));
+  const gap=Math.round(bs*.018), cs=(bs-gap*(S.n-1))/S.n;
+  const tray=$('tray');
+  tray.style.setProperty('--bs',bs+'px'); tray.style.setProperty('--gap',gap+'px'); tray.style.setProperty('--cs',cs+'px');
+}
+addEventListener('resize',fit);
+
+/* ---------- Flow ---------- */
+const maskAt=i=>S.faces[i][S.cur[i]];
+function flow(){
+  const {n,N}=S, depth=Array(N).fill(-1), entry=Array(N).fill(-1), leaks=Array(N).fill(0);
+  const q=[S.src]; depth[S.src]=0;
+  while(q.length){
+    const i=q.shift(), x=i%n, y=(i/n)|0, m=maskAt(i);
+    for(const d of bits(m)){
+      const nx=x+DIRS[d][0], ny=y+DIRS[d][1], o=(d+2)%4;
+      if(nx<0||ny<0||nx>=n||ny>=n){leaks[i]|=1<<d;continue}
+      const j=ny*n+nx;
+      if(!(maskAt(j)&(1<<o))){leaks[i]|=1<<d;continue}
+      if(depth[j]<0){depth[j]=depth[i]+1;entry[j]=o;q.push(j)}
+    }
+  }
+  return {depth,entry,leaks};
+}
+
+function drain(face, delay){
+  face.querySelectorAll('.w').forEach(l=>{l.style.transition=`stroke-dashoffset 170ms ease-in ${delay}ms`;l.style.strokeDashoffset='-1';});
+  const h=face.querySelector('.wh'); h.style.transition=`opacity 120ms ${delay}ms`; h.style.opacity='0';
+  face.querySelectorAll('.leak').forEach(g=>g.classList.remove('on'));
+  face.style.setProperty('--wd',delay+'ms');face.classList.remove('wet');
+}
+
+function applyFlow(base){
+  const F=flow(), fills=[], drains=[];
+  for(let i=0;i<S.N;i++){
+    const c=cells[i], a=S.cur[i];
+    if(F.depth[i]>=0 && !c.filled[a]) fills.push(i);
+    else if(F.depth[i]>=0) { // stays wet: refresh leaks
+      c.faceEls[a].querySelectorAll('.leak').forEach(g=>{g.style.transitionDelay='0ms';g.classList.toggle('on',!!(F.leaks[i]&(1<<+g.dataset.d)))});
+    }
+    else if(F.depth[i]<0 && c.filled[a]) drains.push(i);
+  }
+  const minD=Math.min(...fills.map(i=>F.depth[i]),Infinity);
+  const minDr=Math.min(...drains.map(i=>S.lastDepth?.[i]??0),Infinity);
+  drains.forEach(i=>{drain(cells[i].faceEls[S.cur[i]],Math.max(0,((S.lastDepth?.[i]??0)-minDr))*55);cells[i].filled[S.cur[i]]=false;});
+  // prepare fills
+  const prep=[];
+  fills.forEach(i=>{
+    const face=cells[i].faceEls[S.cur[i]], e=F.entry[i];
+    face.querySelectorAll('.w').forEach(l=>{
+      l.setAttribute('d', +l.dataset.d===e ? l.dataset.pin : l.dataset.pout);
+      l.style.transition='none';l.style.strokeDashoffset='1';
+    });
+    prep.push(i);
+  });
+  void grid.getBoundingClientRect();
+  let maxEnd=0;
+  prep.forEach(i=>{
+    const face=cells[i].faceEls[S.cur[i]], e=F.entry[i];
+    const t0=base+(F.depth[i]-minD)*T, half=e<0?0:T/2;
+    face.querySelectorAll('.w').forEach(l=>{
+      const d=+l.dataset.d, isEntry=d===e;
+      l.style.transition=`stroke-dashoffset ${T/2}ms linear ${isEntry?t0:t0+half}ms`;
+      l.style.strokeDashoffset='0';
+    });
+    const h=face.querySelector('.wh'); h.style.transition=`opacity 60ms ${t0+half-30}ms`; h.style.opacity='1';
+    face.querySelectorAll('.leak').forEach(g=>{g.style.transitionDelay=(t0+half+T/2)+'ms';g.classList.toggle('on',!!(F.leaks[i]&(1<<+g.dataset.d)))});
+    face.style.setProperty('--wd',(t0+half-40)+'ms');face.classList.add('wet');
+    cells[i].filled[S.cur[i]]=true;
+    maxEnd=Math.max(maxEnd,t0+T);
+  });
+  if(prep.length) sfx('water',base);
+  S.lastDepth=F.depth;
+  const wet=F.depth.filter(d=>d>=0).length;
+  setBadge('waterBadge',`${wet}/${S.N}`);
+  const won = wet===S.N;
+  $('tip').textContent = level<=2 ? 'Karoya dokun, çevir. Tüm boruları suya bağla.' : `Hedef: ${S.par} hamle`;
+  if(won){locked=true;setTimeout(win,maxEnd+450)}
+  return F;
+}
+
+/* ---------- Interaction ---------- */
+function tap(i,fromHint){
+  if(locked) return;
+  const c=cells[i];
+  if(i===S.src){c.el.classList.remove('shake');void c.el.offsetWidth;c.el.classList.add('shake');sfx('nope');return}
+  const old=S.cur[i];
+  S.cur[i]=1-old;
+  c.el.classList.toggle('back',!!S.cur[i]);
+  c.el.classList.remove('flipping');void c.el.offsetWidth;c.el.classList.add('flipping');
+  if(c.filled[old]){drain(c.faceEls[old],0);c.filled[old]=false}
+  if(!fromHint) cells.forEach(x=>x.el.classList.remove('hint'));
+  S.moves++; setBadge('movesBadge',S.moves);
+  sfx('flip');
+  applyFlow(260);
+}
+
+function hint(){
+  if(locked) return;
+  const F=flow();
+  const wrong=[];
+  for(let i=0;i<S.N;i++) if(i!==S.src&&S.cur[i]!==S.solFace[i]) wrong.push(i);
+  if(!wrong.length) return;
+  // prefer a wrong tile touching the water
+  const n=S.n, touches=i=>DIRS.some(([dx,dy])=>{const x=i%n+dx,y=((i/n)|0)+dy;return x>=0&&y>=0&&x<n&&y<n&&F.depth[y*n+x]>=0});
+  const pick=wrong.find(touches)??wrong[0];
+  cells.forEach(x=>x.el.classList.remove('hint'));
+  cells[pick].el.classList.add('hint');
+  S.hints++;
+  tap(pick,true);
+}
+
+function setBadge(id,v){const b=$(id);b.textContent=v;b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop')}
+
+function starsFor(){const extra=S.moves-S.par;return extra<=0?3:extra<=3?2:1}
+const STAR='<svg viewBox="0 0 24 24"><path d="M12 2.2l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17l-5.9 3.1 1.3-6.5L2.5 9l6.6-.8z" fill="FILL" stroke="#5a1a12" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+function win(){
+  const st=starsFor();
+  $('stars').innerHTML=[0,1,2].map(k=>STAR.replace('FILL',k<st?'#ffd24d':'#6b1a2c').replace('<svg',`<svg class="${k<st?'on':''}" style="animation-delay:${k*.15+.2}s"`)).join('');
+  const last=level>=MAX_LEVEL;
+  $('winTitle').textContent=last?'Tüm Seviyeler Bitti!':'Bölüm Tamamlandı!';
+  $('nextBtn').textContent=last?'Baştan Başla':'Sonraki';
+  $('winStat').textContent=`${S.moves} hamle · hedef ${S.par}`;
+  $('winOv').hidden=false;
+  sfx('win');
+  for(let k=0;k<26;k++){const d=document.createElement('div');d.className='drop';d.style.left=Math.random()*100+'vw';d.style.animationDuration=(1.4+Math.random()*1.4)+'s';d.style.animationDelay=Math.random()*.6+'s';d.style.opacity=.6+Math.random()*.4;document.body.appendChild(d);setTimeout(()=>d.remove(),3600)}
+}
+
+function start(lv){
+  level=Math.min(MAX_LEVEL,Math.max(1,lv));
+  try{localStorage.setItem('pipeflip.level',level)}catch(e){}
+  S=generate(level); locked=false;
+  $('levelTxt').textContent=`Seviye ${level}/${MAX_LEVEL}`;
+  $('movesBadge').textContent='0';
+  $('tip').textContent = level<=2 ? 'Karoya dokun, çevir. Tüm boruları suya bağla.' : `Hedef: ${S.par} hamle`;
+  $('winOv').hidden=true;
+  build();
+  requestAnimationFrame(()=>{fit();applyFlow(450)});
+}
+
+$('restartBtn').onclick=()=>start(level);
+$('hintBtn').onclick=hint;
+$('nextBtn').onclick=()=>start(level>=MAX_LEVEL?1:level+1);
+$('gearBtn').onclick=()=>{
+  const g=$('lvGrid');g.innerHTML='';
+  for(let k=1;k<=MAX_LEVEL;k++){const b=document.createElement('button');b.className='lv'+(k===level?' cur':'');
+    const z=sizeFor(k);b.innerHTML=`${k}<small>${z}x${z}</small>`;b.setAttribute('aria-label',`Seviye ${k}`);
+    b.onclick=()=>{$('setOv').hidden=true;start(k)};g.appendChild(b);}
+  $('setOv').hidden=false;sfx('flip')};
+$('closeSet').onclick=()=>{$('setOv').hidden=true};
+$('restart2').onclick=()=>{$('setOv').hidden=true;start(level)};
+const syncSound=()=>{$('soundBtn').textContent='Ses: '+(soundOn?'Açık':'Kapalı')};
+$('soundBtn').onclick=()=>{soundOn=!soundOn;syncSound();try{localStorage.setItem('pipeflip.sound',soundOn?'1':'0')}catch(e){}};
+syncSound();
+
+/* ---------- Sound ---------- */
+let ac=null;
+function tone(f1,f2,dur,type,vol,when=0){
+  const t=ac.currentTime+when, o=ac.createOscillator(), g=ac.createGain();
+  o.type=type;o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur+.02);
+}
+function sfx(kind,delayMs=0){
+  if(!soundOn) return;
+  try{ ac=ac||new (window.AudioContext||window.webkitAudioContext)(); if(ac.state==='suspended') ac.resume(); }catch(e){return}
+  const w=delayMs/1000;
+  if(kind==='flip'){tone(520,300,.09,'triangle',.25)}
+  else if(kind==='nope'){tone(200,140,.12,'square',.08)}
+  else if(kind==='water'){for(let k=0;k<4;k++)tone(500+Math.random()*400,900+Math.random()*500,.07,'sine',.12,w+k*.07)}
+  else if(kind==='win'){[523,659,784,1047].forEach((f,k)=>tone(f,f*1.01,.22,'triangle',.22,k*.11))}
+}
+
+/* ---------- Boot (keeps level across live updates) ---------- */
+window.claude?.hot?.snapshot?.(()=>({level}));
+const boot=data=>start(data?.level||level);
+window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+})();
+</script>
+
+</body></html>
